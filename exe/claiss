@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require "dry/cli"
+require 'claiss'
+Dry::CLI.new(Claiss).call
