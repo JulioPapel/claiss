@@ -2,12 +2,19 @@
 Claiss is a Ruby CLI application & Toolbox to manage Laiss AI applications and deployments. Some thing may not work on your environment. Use with caution!
 
 ## Installation:
-
-```
+on your terminal type
+```sh
 $ gem install claiss
 ```
 
-add a refactor.claiss file anywere outside your project. The content shuld be formatted as follows:
+## Refactor:
+Refactor changes text terms in files within a folder to another "refactored-..." folder. Keep in mind that this command will change all the exact occurrences of this term, for example "Abc" is different from "Abc " or " Abc" or "abc".
+
+```sh
+$ claiss refactor ./project/ 
+```
+
+You can creata a json list of terms like ```myapp.dic``` file anywere outside your project. this list is processed by order of precedence from top to bottom. The content shuld be formatted a as one level json hash, like:
 
 ```json
 {
@@ -15,8 +22,8 @@ add a refactor.claiss file anywere outside your project. The content shuld be fo
   "System Pro" : "Laissb2b",
   "System" : "Laiss",
   "system" : "laiss",
-  "2018 Moevo Silver" : "2023 Júlio Papel",
-  "Jason Moevo" : "Júlio Papel",
+  "2010 Moevo Silver" : "2023 Júlio Papel",
+  "Jared Moevo" : "Júlio Papel",
   "3drefxtester@gmail.com" : "info@mynewsite.pt",
   "https://somelivesite.com" : "https://api.mynewsite.pt",
   "This is your Rails project." : "Multi Layered Software Services.",
@@ -25,17 +32,23 @@ add a refactor.claiss file anywere outside your project. The content shuld be fo
   "https://somesite.com" : "https://api.mynewsite.pt"
 
 }
-``` 
+```
+then you can call the list using:
 
-## Usage:
+```sh
+$ claiss refactor ./project/ ./myapp.dic
+```
 
+## Fix Ruby Permissions:
+Fix Ruby Permissions fixes permissions on a refactored Ruby & Rails project.
+You can use it like this:
+```sh
+$ claiss fix_ruby_permissions ./refactored-1688375056/
 ```
-claiss refactor path/project/ refactor.claiss
-```
-Or to be asked for the terms:
-```
-claiss refactor path/project/ 
-```
+  *note: Unix/Linux systems use diferent partitions for storing your files. This command usec CHMOD but may not work on systems that support filename spaces and ignore capitals, like on an end-user operating system. For example a file called 'MyImage copy.svg' will return 2 errors : No such file or directory.
+  If this is your case then use chmod manually to fix those cases an then re-execute the command.
+
+
 
 Other fuctionalities will come soon.
 Cheers!

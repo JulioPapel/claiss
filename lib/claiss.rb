@@ -13,7 +13,7 @@ module Claiss
 
         def call(*)
           spec = Gem::Specification::load("claiss.gemspec")
-          puts "#{spec.summary}"
+          puts "#{spec.description}"
           puts "Version: #{spec.version}"
         end
       end
@@ -32,6 +32,7 @@ module Claiss
           origin_path = File.expand_path(path)
           destination_path = File.expand_path("."+ temp_dir)
 
+          
           if !json_file.nil?
             jfile = File.read(json_file)
             dict = JSON.parse(jfile)
@@ -47,6 +48,9 @@ module Claiss
               input = STDIN.gets.chomp!
             end
           end
+          
+          dict = {origin_path => destination_path}.merge(dict)
+          dict[origin_path] = destination_path
           source = File.expand_path(origin_path + "/**/*", __FILE__)
           Dir.glob(source).reject{ |f| File.directory?(f)}.each do |file_name|
             destination = file_name
@@ -63,11 +67,31 @@ module Claiss
             File.write(destination, text) if !File.directory?(file_name)
             puts "File: #{destination}, OK" if !File.directory?(file_name)
           end
-          puts "done!"
 
+          puts "done! your project is in the #{temp_dir} folder"
         end
       end
 
+      class FixRubyPermissions < Dry::CLI::Command
+        argument :path, required: true, desc: "The path of your ruby project"
+        
+        def call(path: nil, **)
+          if path.nil?
+            path = File.basename(Dir.getwd)
+          end
+          
+          # Run shell scripts to set permissions.
+          directories = `chmod 755 $(find #{path} -type d)`
+          files = `chmod 644 $(find #{path} -type f)`
+          bundle = `chmod 755 #{path+'/bin/bundle'}`
+          rails = `chmod 755 #{path+'/bin/rails'}`
+          rake = `chmod 755 #{path+'/bin/rake'}`
+          spring = `chmod 755 #{path+'/bin/spring'}`
+        end
+      end
+
+
       register "version", Version, aliases: ["v", "-v", "--version"]
       register "refactor",Refactor
+      register "fix_ruby_permissions",FixRubyPermissions
   end
