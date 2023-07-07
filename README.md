@@ -1,5 +1,5 @@
 # Laiss AI CLI application Toolbox
-Claiss is a Ruby CLI application & Toolbox to manage Laiss AI applications and deployments. Some thing may not work on your environment. Use with caution!
+Claiss is a Ruby CLI application & Toolbox to manage Laiss AI applications and deployments. Some things may not work on your environment. Use with caution!
 
 ## Installation:
 on your terminal type
@@ -14,7 +14,7 @@ Refactor changes text terms in files within a folder to another "refactored-..."
 $ claiss refactor ./project/ 
 ```
 
-You can creata a json list of terms like ```myapp.dic``` file anywere outside your project. this list is processed by order of precedence from top to bottom. The content shuld be formatted a as one level json hash, like:
+You can create a json list of terms like ```myapp.dic``` file anywhere outside your project. This list is processed by order of precedence from top to bottom. The content should be formatted as a one level json hash, like:
 
 ```json
 {
