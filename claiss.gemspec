@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name      = 'claiss'
-  s.version   = '1.0.7'
+  s.version   = '1.0.10'
   s.required_ruby_version = '>= 2.7.0'
   s.platform  = Gem::Platform::RUBY
   s.description = "CLI application Toolbox to manage Laiss AI applications and deployments. Some thing may not work on your environment. Use with caution!"

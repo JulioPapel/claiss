@@ -18,8 +18,8 @@ You can create a json list of terms like ```myapp.dic``` file anywhere outside y
 
 ```json
 {
-  "system pro" : "laiss b2b",
-  "System Pro" : "Laissb2b",
+  "system pro" : "system b2b",
+  "System Pro" : "System B2b",
   "System" : "Laiss",
   "system" : "laiss",
   "2010 Moevo Silver" : "2023 Júlio Papel",
