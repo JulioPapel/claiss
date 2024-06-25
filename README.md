@@ -14,7 +14,7 @@ Copy
 
 ### Refactor
 
-The `refactor` command changes text terms in files within a folder, creating a new "refactored-..." folder with the modified files. Note that this command will change all exact occurrences of the specified terms. For example, "Abc" is treated differently from "Abc " or " Abc" or "abc".
+The `refactor` command changes text terms in files within a folder, creating a new "refactored-..." folder with the modified files. Note that this command will change all exact occurrences of the specified terms. For example, "Abc" is treated differently from "AbC " or " ABc" or "abc" or "ABC".
 
 Basic usage:
 
