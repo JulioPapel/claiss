@@ -1,95 +1,108 @@
 require "bundler/setup"
 require "dry/cli"
 require "fileutils"
-require "pathname"
-require 'find'
 require 'json'
 
-module Claiss
-  extend Dry::CLI::Registry
+module CLAISS
+  class Error < StandardError; end
 
   class Version < Dry::CLI::Command
     desc "Print version"
 
     def call(*)
-      spec = Gem::Specification::load("claiss.gemspec")
-      puts "#{spec.description}"
-      puts "Version: #{spec.version}"
+      puts "CLAISS version #{CLAISS::VERSION}"
     end
   end
 
   class Refactor < Dry::CLI::Command
     desc "Refactors terms and files on directories"
-    argument :path, type: :string,  required: true, desc: "Relative path directory"
-    argument :json_file, type: :string, desc: "Provide a Ruby hash file"
-    
+    argument :path, type: :string, required: true, desc: "Relative path directory"
+    argument :json_file, type: :string, desc: "Provide a JSON file with replacement rules"
+
     def call(path:, json_file: nil, **)
-      dict = {}
-      search = ""
-      replace = ""
-      input = "y"
-      temp_dir = "/refactored-#{Time.now.to_i.to_s}"
+      dict = load_dictionary(json_file)
       origin_path = File.expand_path(path)
-      destination_path = File.expand_path("."+ temp_dir)
+      destination_path = File.expand_path("./refactored-#{Time.now.to_i}")
 
-      if !json_file.nil?
-        jfile = File.read(json_file)
-        dict = JSON.parse(jfile)
-      else
-        while input.downcase == "y" do 
-          puts "Term to search: "
-          search = STDIN.gets.chomp
-          puts "Term to replace: "
-          replace = STDIN.gets.chomp
-
-          dict[search] = replace
-          puts "\nAdd another? Type Y \nto Start Refactoring press Enter"
-          input = STDIN.gets.chomp!
-        end
-      end
-
-      dict = {origin_path => destination_path}.merge(dict)
       dict[origin_path] = destination_path
-      source = File.join(origin_path, "**", "{*,.*}")
-      Dir.glob(source, File::FNM_DOTMATCH).each do |file_name|
+      process_files(origin_path, dict)
+
+      puts "Done! Your project is in the #{destination_path} folder"
+    end
+
+    private
+
+    def load_dictionary(json_file)
+      if json_file
+        JSON.parse(File.read(json_file))
+      else
+        interactive_dictionary
+      end
+    end
+
+    def interactive_dictionary
+      dict = {}
+      loop do
+        print "Term to search (or press Enter to finish): "
+        search = STDIN.gets.chomp
+        break if search.empty?
+        print "Term to replace: "
+        replace = STDIN.gets.chomp
+        dict[search] = replace
+      end
+      dict
+    end
+
+    def process_files(origin_path, dict)
+      Dir.glob(File.join(origin_path, "**", "*"), File::FNM_DOTMATCH).each do |file_name|
         next if File.directory?(file_name)
+        process_file(file_name, dict)
+      end
+    end
 
-        destination = file_name
-        text = File.read(file_name)
+    def process_file(file_name, dict)
+      destination = file_name.gsub(dict.keys.first, dict.values.first)
+      text = File.read(file_name)
 
-        dict.each do |p, i|
-          destination.gsub!(p, i)
-          text.gsub!(p, i)
-        end
-
-        FileUtils.mkdir_p(File.dirname(destination))
-        File.write(destination, text)
-        puts "File: #{destination}, OK"
+      dict.each do |search, replace|
+        destination.gsub!(search, replace)
+        text.gsub!(search, replace)
       end
 
-      puts "done! your project is in the #{temp_dir} folder"
+      FileUtils.mkdir_p(File.dirname(destination))
+      File.write(destination, text)
+      puts "File: #{destination}, OK"
     end
   end
 
   class FixRubyPermissions < Dry::CLI::Command
-    argument :path, required: true, desc: "The path of your ruby project"
-    
+    desc "Fix permissions for a Ruby project"
+    argument :path, required: true, desc: "The path of your Ruby project"
+
     def call(path: nil, **)
-      if path.nil?
-        path = File.basename(Dir.getwd)
+      path ||= Dir.getwd
+      path = File.expand_path(path)
+
+      Dir.glob(File.join(path, '**', '*'), File::FNM_DOTMATCH) do |item|
+        next if item == '.' || item == '..'
+        if File.directory?(item)
+          File.chmod(0755, item)
+        else
+          File.chmod(0644, item)
+        end
       end
-      
-      # Run shell scripts to set permissions.
-      directories = `chmod 755 $(find #{path} -type d)`
-      files = `chmod 644 $(find #{path} -type f)`
-      bundle = `chmod 755 #{path+'/bin/bundle'}`
-      rails = `chmod 755 #{path+'/bin/rails'}`
-      rake = `chmod 755 #{path+'/bin/rake'}`
-      spring = `chmod 755 #{path+'/bin/spring'}`
+
+      executable_files = ['bundle', 'rails', 'rake', 'spring']
+      executable_files.each do |file|
+        file_path = File.join(path, 'bin', file)
+        File.chmod(0755, file_path) if File.exist?(file_path)
+      end
+
+      puts "Permissions fixed for #{path}"
     end
   end
-
-  register "version", Version, aliases: ["v", "-v", "--version"]
-  register "refactor", Refactor
-  register "fix_ruby_permissions", FixRubyPermissions
 end
+
+require_relative "claiss/version"
+require_relative "claiss/commands"
+require_relative "claiss/cli"
