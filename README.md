@@ -26,7 +26,7 @@ Copy
 
 You can create a JSON file with a list of terms to refactor. This file should be formatted as a one-level JSON object. The terms are processed in order from top to bottom.
 
-Example `myapp.dic` file:
+Example `myapp.json` file:
 
 Copy
 
@@ -36,7 +36,7 @@ To use this dictionary file:
 
 Copy
 
-`$ claiss refactor ./project/ ./myapp.dic`
+`$ claiss refactor ./project/ ./myapp.json`
 
 ### Fix Ruby Permissions
 
