@@ -22,12 +22,11 @@ module CLAISS
     def call(path:, json_file: nil, **)
       dict = load_dictionary(json_file)
       origin_path = File.expand_path(path)
-      destination_path = File.expand_path("./refactored-#{Time.now.to_i}")
 
-      dict[origin_path] = destination_path
       process_files(origin_path, dict)
+      remove_empty_directories(origin_path)
 
-      puts "Done! Your project is in the #{destination_path} folder"
+      puts "Done! Files have been refactored in place."
     end
 
     private
@@ -56,24 +55,52 @@ module CLAISS
     def process_files(origin_path, dict)
       Dir.glob(File.join(origin_path, "**", "*"), File::FNM_DOTMATCH).each do |file_name|
         next if File.directory?(file_name)
+        next if file_name.include?(".git/") || file_name.include?("node_modules/") # Ignore .git and node_modules folders
         process_file(file_name, dict)
       end
     end
 
     def process_file(file_name, dict)
-      destination = file_name.gsub(dict.keys.first, dict.values.first)
       text = File.read(file_name)
 
       dict.each do |search, replace|
-        destination.gsub!(search, replace)
         text.gsub!(search, replace)
       end
 
-      FileUtils.mkdir_p(File.dirname(destination))
-      File.write(destination, text)
-      puts "File: #{destination}, OK"
+      new_file_name = file_name.dup
+
+      dict.each do |search, replace|
+        new_file_name.gsub!(search, replace)
+      end
+
+      # Create the directory for the new file if it doesn't exist
+      new_dir = File.dirname(new_file_name)
+      FileUtils.mkdir_p(new_dir) unless File.directory?(new_dir)
+
+      # Write the changes to the new file name
+      File.write(new_file_name, text)
+
+      # If the filename has changed, delete the original file
+      unless new_file_name == file_name
+        File.delete(file_name) # Delete the original file
+        puts "File renamed from #{file_name} to #{new_file_name}, OK"
+      else
+        puts "File: #{file_name}, OK"
+      end
+    end
+
+    def remove_empty_directories(origin_path)
+      Dir.glob(File.join(origin_path, '**', '*'), File::FNM_DOTMATCH).reverse_each do |dir_name|
+        next unless File.directory?(dir_name)
+        next if dir_name.include?(".git/") || dir_name.include?("node_modules/") # Ignore .git and node_modules folders
+        if (Dir.entries(dir_name) - %w[. ..]).empty?
+          Dir.rmdir(dir_name)
+          puts "Removed empty directory: #{dir_name}"
+        end
+      end
     end
   end
+
 
   class FixRubyPermissions < Dry::CLI::Command
     desc "Fix permissions for a Ruby project"
@@ -85,10 +112,11 @@ module CLAISS
 
       Dir.glob(File.join(path, '**', '*'), File::FNM_DOTMATCH) do |item|
         next if item == '.' || item == '..'
+        next if item.include?("node_modules/") # Ignore node_modules folder
         if File.directory?(item)
           File.chmod(0755, item)
         else
-          File.chmod(0644, item)
+          fix_file_permissions(item)
         end
       end
 
@@ -100,7 +128,24 @@ module CLAISS
 
       puts "Permissions fixed for #{path}"
     end
+
+    private
+
+    def fix_file_permissions(file)
+      current_permissions = File.stat(file).mode
+
+      if current_permissions & 0o100 != 0 # Check if the owner has execute permission
+        File.chmod(0755, file) # Maintain execution permission for owner, group, and others
+      elsif current_permissions & 0o010 != 0 # Check if the group has execute permission
+        File.chmod(0755, file) # Maintain execution permission for group and others
+      elsif current_permissions & 0o001 != 0 # Check if others have execute permission
+        File.chmod(0755, file) # Maintain execution permission for others
+      else
+        File.chmod(0644, file) # Otherwise, apply standard read/write permissions
+      end
+    end
   end
+
 end
 
 require_relative "claiss/version"
