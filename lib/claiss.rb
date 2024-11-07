@@ -97,20 +97,25 @@ module CLAISS
 
     def refactor_file(file_name, dict, origin_path, destination_path)
       begin
+        # First, try to read the file as UTF-8
         text = File.read(file_name, encoding: 'UTF-8')
       rescue Encoding::InvalidByteSequenceError
+        # If UTF-8 reading fails, fall back to binary reading and force UTF-8 encoding
+        # This approach helps handle files with mixed or unknown encodings
+        LOGGER.warn("Invalid UTF-8 byte sequence in #{file_name}. Falling back to binary reading.")
         text = File.read(file_name, encoding: 'BINARY')
         text.force_encoding('UTF-8')
+        # Replace any invalid or undefined characters with empty string
         text.encode!('UTF-8', invalid: :replace, undef: :replace, replace: '')
       end
-
+    
       text_changed = false
       dict.each do |search, replace|
         if text.gsub!(/#{Regexp.escape(search)}/, replace)
           text_changed = true
         end
       end
-
+    
       relative_path = Pathname.new(file_name).relative_path_from(Pathname.new(origin_path))
       new_relative_path = replace_in_path(relative_path.to_s, dict)
       
@@ -119,21 +124,22 @@ module CLAISS
       else
         new_file_name = File.join(origin_path, new_relative_path)
       end
-
+    
       new_dir = File.dirname(new_file_name)
       FileUtils.mkdir_p(new_dir) unless File.directory?(new_dir)
-
+    
       if text_changed || new_file_name != file_name
         File.write(new_file_name, text)
         if destination_path || new_file_name != file_name
-          puts "File #{destination_path ? 'copied' : 'renamed'} from #{file_name} to #{new_file_name}, OK"
+          LOGGER.info("File #{destination_path ? 'copied' : 'renamed'} from #{file_name} to #{new_file_name}")
         else
-          puts "File contents updated: #{file_name}, OK"
+          LOGGER.info("File contents updated: #{file_name}")
         end
         File.delete(file_name) if !destination_path && new_file_name != file_name
       end
     rescue => e
-      puts "Error processing file #{file_name}: #{e.message}"
+      LOGGER.error("Error processing file #{file_name}: #{e.message}")
+      LOGGER.debug(e.backtrace.join("\n"))
     end
 
     def replace_in_path(path, dict)
