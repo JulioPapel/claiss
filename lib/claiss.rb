@@ -4,6 +4,8 @@ require 'pathname'
 require 'json'
 require "fileutils"
 require 'logger'
+require 'parallel'
+require 'ruby-progressbar'
 
 # CLAISS module provides CLI commands for refactoring and managing Ruby projects
 module CLAISS
@@ -43,13 +45,34 @@ module CLAISS
       json_file = File.join(DEFAULT_JSON_DIR, "#{rules}.json")
       dict = load_dictionary(json_file)
   
-      process_files(origin_path, dict, destination_path)
+      files = get_files_to_process(origin_path)
+      process_files_in_parallel(files, dict, origin_path, destination_path)
       remove_empty_directories(destination_path || origin_path)
   
       puts "Done! Files have been refactored#{destination_path ? ' to the destination' : ' in place'}."
     end
 
     private
+
+    def get_files_to_process(origin_path)
+      Dir.glob(File.join(origin_path, '**', '*'), File::FNM_DOTMATCH).reject do |file_name|
+        File.directory?(file_name) || IGNORED_DIRECTORIES.any? { |dir| file_name.include?(dir) }
+      end
+    end
+
+    def process_files_in_parallel(files, dict, origin_path, destination_path)
+      progress_bar = ProgressBar.create(
+        total: files.size,
+        format: "%a %b\u{15E7}%i %p%% %t",
+        progress_mark: ' ',
+        remainder_mark: "\u{FF65}"
+      )
+  
+      Parallel.each(files, in_threads: Parallel.processor_count) do |file_name|
+        refactor_file(file_name, dict, origin_path, destination_path)
+        progress_bar.increment
+      end
+    end
 
     def load_dictionary(json_file)
       LOGGER.info("Attempting to load dictionary from: #{json_file}")
@@ -102,7 +125,8 @@ module CLAISS
       rescue Encoding::InvalidByteSequenceError
         # If UTF-8 reading fails, fall back to binary reading and force UTF-8 encoding
         # This approach helps handle files with mixed or unknown encodings
-        LOGGER.warn("Invalid UTF-8 byte sequence in #{file_name}. Falling back to binary reading.")
+        truncated_file_name = File.basename(file_name)
+        LOGGER.warn("Invalid UTF-8 byte sequence in ...#{truncated_file_name}. Falling back to binary reading.")
         text = File.read(file_name, encoding: 'BINARY')
         text.force_encoding('UTF-8')
         # Replace any invalid or undefined characters with empty string
@@ -131,14 +155,18 @@ module CLAISS
       if text_changed || new_file_name != file_name
         File.write(new_file_name, text)
         if destination_path || new_file_name != file_name
-          LOGGER.info("File #{destination_path ? 'copied' : 'renamed'} from #{file_name} to #{new_file_name}")
+          truncated_old = "...#{File.basename(file_name)}"
+          truncated_new = "...#{File.basename(new_file_name)}"
+          LOGGER.info("File #{destination_path ? 'copied' : 'renamed'} from #{truncated_old} to #{truncated_new}")
         else
-          LOGGER.info("File contents updated: #{file_name}")
+          truncated_file = "...#{File.basename(file_name)}"
+          LOGGER.info("File contents updated: #{truncated_file}")
         end
         File.delete(file_name) if !destination_path && new_file_name != file_name
       end
     rescue => e
-      LOGGER.error("Error processing file #{file_name}: #{e.message}")
+      truncated_file = "...#{File.basename(file_name)}"
+      LOGGER.error("Error processing file #{truncated_file}: #{e.message}")
       LOGGER.debug(e.backtrace.join("\n"))
     end
 

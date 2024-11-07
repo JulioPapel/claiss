@@ -27,4 +27,6 @@ Gem::Specification.new do |s|
   s.add_dependency "dry-cli", '~> 1.0.0'
   s.add_dependency "fileutils", '~> 1.7.1'
   s.add_dependency "json", '~> 2.6.3'
+  s.add_dependency  'parallel', '~> 1.26.3'
+  s.add_dependency  'ruby-progressbar', '~> 1.13.0'
 end
