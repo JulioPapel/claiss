@@ -1,3 +1,3 @@
 module CLAISS
-    VERSION = "1.1.2"
-  end
+  VERSION = "1.1.4"
+end

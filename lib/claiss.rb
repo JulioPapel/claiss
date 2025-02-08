@@ -1,7 +1,7 @@
 require "bundler/setup"
 require "dry/cli"
 require "fileutils"
-require 'json'
+require "json"
 
 module CLAISS
   class Error < StandardError; end
@@ -33,7 +33,30 @@ module CLAISS
 
     def load_dictionary(json_file)
       if json_file
-        JSON.parse(File.read(json_file))
+        # Procura o arquivo no diretório atual e no ~/.claiss
+        possible_paths = [
+          json_file,
+          File.expand_path(json_file),
+          File.expand_path("~/.claiss/#{json_file}"),
+        ]
+
+        found_file = possible_paths.find { |path| File.exist?(path) }
+
+        if found_file
+          begin
+            dict = JSON.parse(File.read(found_file))
+            puts "Oba! Encontrei o arquivo em: #{found_file}"
+            return dict
+          rescue JSON::ParserError => e
+            puts "Ops! O arquivo JSON não está no formato correto. Erro: #{e.message}"
+          end
+        else
+          puts "Hmm, não consegui encontrar o arquivo. Procurei nesses lugares:"
+          possible_paths.each { |path| puts "  - #{path}" }
+        end
+
+        puts "Vamos usar o dicionário interativo em vez disso, tá bom?"
+        interactive_dictionary
       else
         interactive_dictionary
       end
@@ -90,17 +113,21 @@ module CLAISS
     end
 
     def remove_empty_directories(origin_path)
-      Dir.glob(File.join(origin_path, '**', '*'), File::FNM_DOTMATCH).reverse_each do |dir_name|
+      Dir.glob(File.join(origin_path, "**", "*"), File::FNM_DOTMATCH).reverse_each do |dir_name|
         next unless File.directory?(dir_name)
-        next if dir_name.include?(".git/") || dir_name.include?("node_modules/") # Ignore .git and node_modules folders
+        next if dir_name.include?(".git/") || dir_name.include?("node_modules/") # Ignorar pastas .git e node_modules
+        next if dir_name == "." || dir_name == ".." # Ignorar diretórios especiais . e ..
         if (Dir.entries(dir_name) - %w[. ..]).empty?
-          Dir.rmdir(dir_name)
-          puts "Removed empty directory: #{dir_name}"
+          begin
+            Dir.rmdir(dir_name)
+            puts "Diretório vazio removido: #{dir_name}"
+          rescue Errno::ENOTEMPTY, Errno::EINVAL => e
+            puts "Não foi possível remover o diretório: #{dir_name}. Erro: #{e.message}"
+          end
         end
       end
     end
   end
-
 
   class FixRubyPermissions < Dry::CLI::Command
     desc "Fix permissions for a Ruby project"
@@ -110,8 +137,8 @@ module CLAISS
       path ||= Dir.getwd
       path = File.expand_path(path)
 
-      Dir.glob(File.join(path, '**', '*'), File::FNM_DOTMATCH) do |item|
-        next if item == '.' || item == '..'
+      Dir.glob(File.join(path, "**", "*"), File::FNM_DOTMATCH) do |item|
+        next if item == "." || item == ".."
         next if item.include?("node_modules/") # Ignore node_modules folder
         if File.directory?(item)
           File.chmod(0755, item)
@@ -120,9 +147,9 @@ module CLAISS
         end
       end
 
-      executable_files = ['bundle', 'rails', 'rake', 'spring']
+      executable_files = ["bundle", "rails", "rake", "spring"]
       executable_files.each do |file|
-        file_path = File.join(path, 'bin', file)
+        file_path = File.join(path, "bin", file)
         File.chmod(0755, file_path) if File.exist?(file_path)
       end
 
@@ -145,7 +172,6 @@ module CLAISS
       end
     end
   end
-
 end
 
 require_relative "claiss/version"
