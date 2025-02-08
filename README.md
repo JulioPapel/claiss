@@ -10,9 +10,9 @@
 
 Install the CLAISS gem by running the following command in your terminal:
 
-´´´sh
+```sh
 $ gem install claiss
-´´´
+```
 
 ## Usage
 
@@ -20,17 +20,17 @@ $ gem install claiss
 
 To check the CLAISS version:
 
-´´´sh
+```sh
 $ claiss version
-´´´
+```
 
 or use the shortcuts:
 
-´´´sh
+```sh
 $ claiss v
 $ claiss -v
 $ claiss --version
-´´´
+```
 
 ### Refactor
 
@@ -40,15 +40,15 @@ The `refactor` command allows you to rename and replace text terms within files 
 
 Basic usage:
 
-´´´sh
+```sh
 $ claiss refactor <project_path> <json_file>
-´´´
+```
 
 Example:
 
-´´´sh
+```sh
 $ claiss refactor llama_index laiss_labs.json
-´´´
+```
 
 #### Using a JSON Dictionary
 
@@ -56,14 +56,14 @@ You can create a JSON file that specifies the terms you want to refactor. This J
 
 Example `laiss_labs.json`:
 
-´´´json
+```json
 {
     "system pro": "system b2b",
     "System Pro": "System B2b",
     "System": "Laiss",
     "system": "laiss"
 }
-´´´
+```
 
 **Important:** After refactoring, any empty directories left behind will be automatically removed to keep your project structure clean.
 
@@ -71,9 +71,9 @@ Example `laiss_labs.json`:
 
 The `fix_ruby_permissions` command adjusts file permissions for a Ruby or Rails project.
 
-´´´sh
+```sh
 $ claiss fix_ruby_permissions <project_path>
-´´´
+```
 
 ## Future Features
 
@@ -101,9 +101,9 @@ Júlio Papel
 
 Instale a gem CLAISS executando o seguinte comando no seu terminal:
 
-´´´sh
+```sh
 $ gem install claiss
-´´´
+```
 
 ## Uso
 
@@ -111,17 +111,17 @@ $ gem install claiss
 
 Para verificar a versão do CLAISS:
 
-´´´sh
+```sh
 $ claiss version
-´´´
+```
 
 ou use os atalhos:
 
-´´´sh
+```sh
 $ claiss v
 $ claiss -v
 $ claiss --version
-´´´
+```
 
 ### Refactor
 
@@ -131,15 +131,15 @@ O comando `refactor` permite que você renomeie e substitua termos de texto dent
 
 Uso básico:
 
-´´´sh
+```sh
 $ claiss refactor <caminho_do_projeto> <arquivo_json>
-´´´
+```
 
 Exemplo:
 
-´´´sh
+```sh
 $ claiss refactor llama_index laiss_labs.json
-´´´
+```
 
 #### Usando um Dicionário JSON
 
@@ -147,14 +147,14 @@ Você pode criar um arquivo JSON que especifica os termos que deseja refatorar. 
 
 Exemplo `laiss_labs.json`:
 
-´´´json
+```json
 {
     "system pro": "system b2b",
     "System Pro": "System B2b",
     "System": "Laiss",
     "system": "laiss"
 }
-´´´
+```
 
 **Importante:** Após a refatoração, quaisquer diretórios vazios deixados para trás serão automaticamente removidos para manter a estrutura do seu projeto limpa.
 
@@ -162,9 +162,9 @@ Exemplo `laiss_labs.json`:
 
 O comando `fix_ruby_permissions` ajusta as permissões de arquivos para um projeto Ruby ou Rails.
 
-´´´sh
+```sh
 $ claiss fix_ruby_permissions <caminho_do_projeto>
-´´´
+```
 
 ## Recursos Futuros
 
