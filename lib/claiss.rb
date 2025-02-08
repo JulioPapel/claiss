@@ -1,9 +1,16 @@
-require "bundler/setup"
 require "dry/cli"
 require "fileutils"
 require "json"
 
+# CLAISS module provides CLI commands for refactoring and managing Ruby projects
 module CLAISS
+  IGNORED_DIRECTORIES = [".git/", "node_modules/"]
+  DEFAULT_JSON_DIR = File.join(Dir.home, ".claiss")
+
+  # Initialize logger
+  LOGGER = Logger.new(STDOUT)
+  LOGGER.level = Logger::INFO  # Set to Logger::DEBUG for more verbose output
+
   class Error < StandardError; end
 
   class Version < Dry::CLI::Command
@@ -15,21 +22,52 @@ module CLAISS
   end
 
   class Refactor < Dry::CLI::Command
-    desc "Refactors terms and files on directories"
-    argument :path, type: :string, required: true, desc: "Relative path directory"
-    argument :json_file, type: :string, desc: "Provide a JSON file with replacement rules"
+    desc "Refactor files and filenames"
 
-    def call(path:, json_file: nil, **)
-      dict = load_dictionary(json_file)
+    argument :path, type: :string, required: true, desc: "Path to the directory to refactor"
+    argument :rules, type: :string, required: true, desc: "Name of the rules file (without .json extension)"
+    option :destination, type: :string, desc: "Destination path for refactored files"
+
+    example [
+      "path/to/project autokeras",
+      "path/to/project autokeras --destination path/to/output",
+    ]
+
+    def call(path:, rules:, destination: nil, **)
       origin_path = File.expand_path(path)
+      destination_path = destination ? File.expand_path(destination) : nil
 
-      process_files(origin_path, dict)
-      remove_empty_directories(origin_path)
+      json_file = File.join(DEFAULT_JSON_DIR, "#{rules}.json")
+      dict = load_dictionary(json_file)
 
-      puts "Done! Files have been refactored in place."
+      files = get_files_to_process(origin_path)
+      process_files_in_parallel(files, dict, origin_path, destination_path)
+      remove_empty_directories(destination_path || origin_path)
+
+      puts "Done! Files have been refactored#{destination_path ? " to the destination" : " in place"}."
     end
 
     private
+
+    def get_files_to_process(origin_path)
+      Dir.glob(File.join(origin_path, "**", "*"), File::FNM_DOTMATCH).reject do |file_name|
+        File.directory?(file_name) || IGNORED_DIRECTORIES.any? { |dir| file_name.include?(dir) }
+      end
+    end
+
+    def process_files_in_parallel(files, dict, origin_path, destination_path)
+      progress_bar = ProgressBar.create(
+        total: files.size,
+        format: "%a %b\u{15E7}%i %p%% %t",
+        progress_mark: " ",
+        remainder_mark: "\u{FF65}",
+      )
+
+      Parallel.each(files, in_threads: Parallel.processor_count) do |file_name|
+        refactor_file(file_name, dict, origin_path, destination_path)
+        progress_bar.increment
+      end
+    end
 
     def load_dictionary(json_file)
       if json_file
@@ -62,53 +100,69 @@ module CLAISS
       end
     end
 
-    def interactive_dictionary
-      dict = {}
-      loop do
-        print "Term to search (or press Enter to finish): "
-        search = STDIN.gets.chomp
-        break if search.empty?
-        print "Term to replace: "
-        replace = STDIN.gets.chomp
-        dict[search] = replace
-      end
-      dict
-    end
-
-    def process_files(origin_path, dict)
-      Dir.glob(File.join(origin_path, "**", "*"), File::FNM_DOTMATCH).each do |file_name|
+    def process_files(origin_path, dict, destination_path)
+      Dir.glob(File.join(origin_path, "**", "*"), File::FNM_DOTMATCH) do |file_name|
         next if File.directory?(file_name)
-        next if file_name.include?(".git/") || file_name.include?("node_modules/") # Ignore .git and node_modules folders
-        process_file(file_name, dict)
+        next if IGNORED_DIRECTORIES.any? { |dir| file_name.include?(dir) }
+        refactor_file(file_name, dict, origin_path, destination_path)
       end
     end
 
-    def process_file(file_name, dict)
-      text = File.read(file_name)
-
-      dict.each do |search, replace|
-        text.gsub!(search, replace)
+    def refactor_file(file_name, dict, origin_path, destination_path)
+      begin
+        # First, try to read the file as UTF-8
+        text = File.read(file_name, encoding: "UTF-8")
+      rescue Encoding::InvalidByteSequenceError
+        # If UTF-8 reading fails, fall back to binary reading and force UTF-8 encoding
+        # This approach helps handle files with mixed or unknown encodings
+        truncated_file_name = File.basename(file_name)
+        LOGGER.warn("Invalid UTF-8 byte sequence in ...#{truncated_file_name}. Falling back to binary reading.")
+        text = File.read(file_name, encoding: "BINARY")
+        text.force_encoding("UTF-8")
+        # Replace any invalid or undefined characters with empty string
+        text.encode!("UTF-8", invalid: :replace, undef: :replace, replace: "")
       end
 
-      new_file_name = file_name.dup
-
+      text_changed = false
       dict.each do |search, replace|
-        new_file_name.gsub!(search, replace)
+        if text.gsub!(/#{Regexp.escape(search)}/, replace)
+          text_changed = true
+        end
       end
 
-      # Create the directory for the new file if it doesn't exist
+      relative_path = Pathname.new(file_name).relative_path_from(Pathname.new(origin_path))
+      new_relative_path = replace_in_path(relative_path.to_s, dict)
+
+      if destination_path
+        new_file_name = File.join(destination_path, new_relative_path)
+      else
+        new_file_name = File.join(origin_path, new_relative_path)
+      end
+
       new_dir = File.dirname(new_file_name)
       FileUtils.mkdir_p(new_dir) unless File.directory?(new_dir)
 
-      # Write the changes to the new file name
-      File.write(new_file_name, text)
+      if text_changed || new_file_name != file_name
+        File.write(new_file_name, text)
+        if destination_path || new_file_name != file_name
+          truncated_old = "...#{File.basename(file_name)}"
+          truncated_new = "...#{File.basename(new_file_name)}"
+          LOGGER.info("File #{destination_path ? "copied" : "renamed"} from #{truncated_old} to #{truncated_new}")
+        else
+          truncated_file = "...#{File.basename(file_name)}"
+          LOGGER.info("File contents updated: #{truncated_file}")
+        end
+        File.delete(file_name) if !destination_path && new_file_name != file_name
+      end
+    rescue => e
+      truncated_file = "...#{File.basename(file_name)}"
+      LOGGER.error("Error processing file #{truncated_file}: #{e.message}")
+      LOGGER.debug(e.backtrace.join("\n"))
+    end
 
-      # If the filename has changed, delete the original file
-      unless new_file_name == file_name
-        File.delete(file_name) # Delete the original file
-        puts "File renamed from #{file_name} to #{new_file_name}, OK"
-      else
-        puts "File: #{file_name}, OK"
+    def replace_in_path(path, dict)
+      dict.reduce(path) do |s, (search, replace)|
+        s.gsub(/#{Regexp.escape(search)}/, replace)
       end
     end
 
@@ -131,10 +185,15 @@ module CLAISS
 
   class FixRubyPermissions < Dry::CLI::Command
     desc "Fix permissions for a Ruby project"
-    argument :path, required: true, desc: "The path of your Ruby project"
 
-    def call(path: nil, **)
-      path ||= Dir.getwd
+    argument :path, type: :string, required: false, default: ".", desc: "Path to the Ruby project (default: current directory)"
+
+    example [
+      "",
+      "path/to/ruby/project",
+    ]
+
+    def call(path: ".", **)
       path = File.expand_path(path)
 
       Dir.glob(File.join(path, "**", "*"), File::FNM_DOTMATCH) do |item|
@@ -153,22 +212,16 @@ module CLAISS
         File.chmod(0755, file_path) if File.exist?(file_path)
       end
 
-      puts "Permissions fixed for #{path}"
+      puts "Permissions fixed for Ruby project at #{path}"
     end
 
     private
 
     def fix_file_permissions(file)
-      current_permissions = File.stat(file).mode
-
-      if current_permissions & 0o100 != 0 # Check if the owner has execute permission
-        File.chmod(0755, file) # Maintain execution permission for owner, group, and others
-      elsif current_permissions & 0o010 != 0 # Check if the group has execute permission
-        File.chmod(0755, file) # Maintain execution permission for group and others
-      elsif current_permissions & 0o001 != 0 # Check if others have execute permission
-        File.chmod(0755, file) # Maintain execution permission for others
+      if File.extname(file) == ".rb" || file.include?("/bin/")
+        File.chmod(0755, file)
       else
-        File.chmod(0644, file) # Otherwise, apply standard read/write permissions
+        File.chmod(0644, file)
       end
     end
   end
