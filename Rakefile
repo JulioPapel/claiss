@@ -1,4 +1,26 @@
 require 'bundler/gem_tasks'
+require 'rspec/core/rake_task'
+
+# Carrega o arquivo de versão para ter acesso à constante VERSION
+require_relative 'lib/claiss/version'
+
+# Tarefas do RSpec
+RSpec::Core::RakeTask.new(:spec) do |t|
+  t.pattern = 'spec/**/*_spec.rb'
+end
+
+namespace :test do
+  desc 'Executa todos os testes com cobertura de código'
+  task :coverage do
+    ENV['COVERAGE'] = 'true'
+    Rake::Task['spec'].execute
+  end
+
+  desc 'Executa testes em paralelo'
+  task :parallel do
+    sh 'bundle exec parallel_rspec spec/'
+  end
+end
 
 namespace :claiss do
   desc "Build the gem"
@@ -18,10 +40,18 @@ namespace :claiss do
     system "gem push #{gem_file}"
   end
 
-  desc "Clean up built gems"
+  desc "Clean up built gems and test artifacts"
   task :clean do
     FileUtils.rm_f Dir.glob('claiss-*.gem')
+    FileUtils.rm_rf('coverage')
+    FileUtils.rm_rf('tmp')
   end
+  
+  desc 'Executa os testes antes de publicar'
+  task :release => ['test:coverage', :build, :publish, :clean]
 end
 
-task :default => 'claiss:build'
+# Tarefas padrão
+task :default => 'spec'
+
+task :test => :spec

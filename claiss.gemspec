@@ -26,5 +26,12 @@ Gem::Specification.new do |s|
   
   s.add_dependency "dry-cli", '~> 1.0.0'
   s.add_dependency "fileutils", '~> 1.7.1'
-  s.add_dependency "json", '~> 2.6.3'
+  s.add_dependency "json", '~> 2.10.2'
+  
+  # Dependências de desenvolvimento
+  s.add_development_dependency "rspec", "~> 3.12"
+  s.add_development_dependency "rspec-mocks", "~> 3.12"
+  s.add_development_dependency "simplecov", "~> 0.22.0"
+  s.add_development_dependency "webmock", "~> 3.19"
+  s.add_development_dependency "pry-byebug", "~> 3.10"
 end
