@@ -1,0 +1,100 @@
+# Arquivos de ambiente
+.env
+.env.*
+!.env.example
+
+# Arquivos de IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Arquivos do Bundler
+/vendor/bundle/
+/.bundle
+
+# Arquivos de dependências
+Gemfile.lock
+.ruby-version
+.ruby-gemset
+
+# Arquivos de documentação
+doc/
+.yardoc/
+.yardoc/
+
+# Arquivos de cobertura de teste
+/coverage/
+
+# Arquivos de saída de teste
+/rspec.xml
+junit/
+
+# Arquivos de log
+*.log
+log/*.log
+
+# Arquivos temporários
+/tmp/
+/temp/
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de build
+*.gem
+/pkg/
+
+# Arquivos de projeto de teste
+test_projects/
+
+# Arquivos de backup
+*.bak
+*.backup
+*.orig
+
+# Arquivos específicos do projeto
+todo.md
+
+# Arquivos de configuração local
+config/database.yml
+config/secrets.yml
+
+# Arquivos de cache
+.sass-cache/
+.jekyll-cache/
+
+# Arquivos de dependências do Node
+node_modules/
+
+# Arquivos do Spring
+.spring
+
+# Arquivos do SimpleCov
+/coverage/
+
+# Arquivos do Byebug
+.byebug_history
+
+# Arquivos do RSpec
+/rspec-*.xml
+
+# Arquivos do Yard
+.yardoc/
+doc/
+
+# Arquivos do RubyMine
+.idea/
+*.iml
+
+# Arquivos do Vim
+*.swp
+*.swo
+*~
+
+# Arquivos do Emacs
+*~
+\#*
+.#*
