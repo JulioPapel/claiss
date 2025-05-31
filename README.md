@@ -1,32 +1,48 @@
-# CLAISS CLI Refactor Application Toolbox
+# CLAISS CLI - Ferramenta de Refatoração Inteligente
 
 [English](#english) | [Português](#português)
 
 # English
 
-**CLAISS** is a Ruby-based CLI application and toolbox designed to manage CLAISS Refactored applications and deployments. Please note that some features may have limited compatibility depending on the environment. Use with caution!
+**CLAISS** is a powerful Ruby-based CLI application designed to help developers refactor codebases with ease. It provides tools for batch renaming, text replacement, and permission management across your projects.
 
-## Installation
+[![Build Status](https://img.shields.io/github/actions/workflow/status/JulioPapel/claiss/ci.yml?branch=main)](https://github.com/JulioPapel/claiss/actions)
+[![Gem Version](https://badge.fury.io/rb/claiss.svg)](https://badge.fury.io/rb/claiss)
+[![Maintainability](https://api.codeclimate.com/v1/badges/.../maintainability)](https://codeclimate.com/github/JulioPapel/claiss/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/.../test_coverage)](https://codeclimate.com/github/JulioPapel/claiss/test_coverage)
 
-Install the CLAISS gem by running the following command in your terminal:
+## ✨ Features
 
-```sh
-$ gem install claiss
+- 🔄 Refactor file contents and names in batch
+- 🔍 Preview changes before applying them
+- 📊 Generate detailed diffs of changes
+- 🔒 Fix Ruby file permissions automatically
+- 🚀 Fast parallel processing
+- 🛡️ Safe refactoring with backup options
+
+## 🚀 Installation
+
+Install the CLAISS gem:
+
+```bash
+gem install claiss
 ```
 
-## Usage
+Or add it to your Gemfile:
+
+```ruby
+gem 'claiss', '~> 1.0'
+```
+
+## 🛠️ Commands
 
 ### Version
 
-To check the CLAISS version:
+Check the CLAISS version:
 
-```sh
+```bash
 $ claiss version
-```
-
-or use the shortcuts:
-
-```sh
+# Or use shortcuts:
 $ claiss v
 $ claiss -v
 $ claiss --version
@@ -34,150 +50,241 @@ $ claiss --version
 
 ### Refactor
 
-The `refactor` command allows you to rename and replace text terms within files and filenames in a specified directory. This command will refactor all exact occurrences of specified terms, including filenames.
+Refactor file contents and names using a JSON dictionary:
 
-**Note:** The `refactor` command ignores the `.git/` and `node_modules/` directories to avoid modifying critical or third-party files.
-
-Basic usage:
-
-```sh
-$ claiss refactor <project_path> <json_file>
+```bash
+$ claiss refactor <project_path> <json_file> [options]
 ```
 
-Example:
+**Options:**
+- `--destination, -d`: Specify output directory (default: in-place)
+- `--dry-run`: Preview changes without modifying files
 
-```sh
-$ claiss refactor llama_index laiss_labs.json
+**Example:**
+```bash
+$ claiss refactor my_project refactor_rules.json --dry-run
 ```
 
-#### Using a JSON Dictionary
+#### JSON Dictionary Format
 
-You can create a JSON file that specifies the terms you want to refactor. This JSON file should be structured as a simple key-value pair object, where each key is the term to be replaced and the value is the replacement term.
-
-Example `laiss_labs.json`:
+Create a JSON file with key-value pairs for replacements:
 
 ```json
 {
-    "system pro": "system b2b",
-    "System Pro": "System B2b",
-    "System": "Laiss",
-    "system": "laiss"
+  "old_term": "new_term",
+  "OldClass": "NewClass",
+  "old_method": "new_method"
 }
 ```
 
-**Important:** After refactoring, any empty directories left behind will be automatically removed to keep your project structure clean.
+### Diff
+
+Preview changes before refactoring:
+
+```bash
+$ claiss diff <project_path> <json_file> [options]
+```
+
+**Options:**
+- `--context=N`: Number of context lines (default: 3)
+- `--color=WHEN`: Colorize output (always, never, auto)
 
 ### Fix Ruby Permissions
 
-The `fix_ruby_permissions` command adjusts file permissions for a Ruby or Rails project.
+Fix file permissions for Ruby projects:
 
-```sh
+```bash
 $ claiss fix_ruby_permissions <project_path>
 ```
 
-## Future Features
+## 🔍 Example Workflow
 
-We are continuously working to improve CLAISS and add new functionalities. Stay tuned for updates!
+1. Create a refactoring plan:
+   ```json
+   {
+     "old_name": "new_name",
+     "OldModule": "NewModule",
+     "@old_attr": "@new_attr"
+   }
+   ```
 
-## Contributing
+2. Preview changes:
+   ```bash
+   $ claiss diff my_project changes.json
+   ```
 
-Bug reports and pull requests are welcome on GitHub at [https://github.com/JulioPapel/claiss](https://github.com/JulioPapel/claiss).
+3. Apply changes:
+   ```bash
+   $ claiss refactor my_project changes.json
+   ```
 
-## License
+## 🛡️ Safety Features
 
-This gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+- Creates backups before making changes
+- Dry-run mode to preview changes
+- Ignores version control directories (`.git/`, `.hg/`)
+- Skips binary files by default
+- Preserves file permissions
 
-## Author
+## 🤝 Contributing
 
-Júlio Papel
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+## 👨‍💻 Author
+
+- **Júlio Papel** - [@JulioPapel](https://github.com/JulioPapel)
+
+## 🙏 Acknowledgments
+
+- Thanks to all contributors who have helped improve CLAISS
+- Inspired by various open-source refactoring tools
 
 ---
 
 # Português
 
-**CLAISS** é uma aplicação CLI e caixa de ferramentas em Ruby projetada para gerenciar aplicações e implantações CLAISS Refactored. Por favor, note que algumas funcionalidades podem ter compatibilidade limitada dependendo do ambiente. Use com cuidado!
+**CLAISS** é uma poderosa ferramenta de linha de comando em Ruby projetada para ajudar desenvolvedores a refatorar bases de código com facilidade. Oferece ferramentas para renomeação em lote, substituição de texto e gerenciamento de permissões em seus projetos.
 
-## Instalação
+## ✨ Funcionalidades
 
-Instale a gem CLAISS executando o seguinte comando no seu terminal:
+- 🔄 Refatoração de conteúdo e nomes de arquivos em lote
+- 🔍 Visualização prévia das alterações
+- 📊 Geração de relatórios detalhados de diferenças
+- 🔒 Correção automática de permissões de arquivos Ruby
+- 🚀 Processamento paralelo rápido
+- 🛡️ Refatoração segura com opções de backup
 
-```sh
-$ gem install claiss
+## 🚀 Instalação
+
+Instale a gem CLAISS:
+
+```bash
+gem install claiss
 ```
 
-## Uso
+Ou adicione ao seu Gemfile:
+
+```ruby
+gem 'claiss', '~> 1.0'
+```
+
+## 🛠️ Comandos
 
 ### Versão
 
-Para verificar a versão do CLAISS:
+Verifique a versão do CLAISS:
 
-```sh
+```bash
 $ claiss version
-```
-
-ou use os atalhos:
-
-```sh
+# Ou use os atalhos:
 $ claiss v
 $ claiss -v
 $ claiss --version
 ```
 
-### Refactor
+### Refatorar
 
-O comando `refactor` permite que você renomeie e substitua termos de texto dentro de arquivos e nomes de arquivos em um diretório especificado. Este comando irá refatorar todas as ocorrências exatas dos termos especificados, incluindo nomes de arquivos.
+Refatore conteúdos e nomes de arquivos usando um dicionário JSON:
 
-**Nota:** O comando `refactor` ignora os diretórios `.git/` e `node_modules/` para evitar modificar arquivos críticos ou de terceiros.
-
-Uso básico:
-
-```sh
-$ claiss refactor <caminho_do_projeto> <arquivo_json>
+```bash
+$ claiss refactor <caminho_do_projeto> <arquivo_json> [opções]
 ```
 
-Exemplo:
+**Opções:**
+- `--destination, -d`: Especifica o diretório de saída (padrão: no local)
+- `--dry-run`: Visualiza as alterações sem modificar os arquivos
 
-```sh
-$ claiss refactor llama_index laiss_labs.json
+**Exemplo:**
+```bash
+$ claiss refactor meu_projeto regras.json --dry-run
 ```
 
-#### Usando um Dicionário JSON
+#### Formato do Dicionário JSON
 
-Você pode criar um arquivo JSON que especifica os termos que deseja refatorar. Este arquivo JSON deve ser estruturado como um objeto de pares chave-valor simples, onde cada chave é o termo a ser substituído e o valor é o termo de substituição.
-
-Exemplo `laiss_labs.json`:
+Crie um arquivo JSON com pares chave-valor para as substituições:
 
 ```json
 {
-    "system pro": "system b2b",
-    "System Pro": "System B2b",
-    "System": "Laiss",
-    "system": "laiss"
+  "termo_antigo": "novo_termo",
+  "ClasseAntiga": "NovaClasse",
+  "metodo_antigo": "novo_metodo"
 }
 ```
 
-**Importante:** Após a refatoração, quaisquer diretórios vazios deixados para trás serão automaticamente removidos para manter a estrutura do seu projeto limpa.
+### Diferenças
 
-### Fix Ruby Permissions
+Visualize as alterações antes de refatorar:
 
-O comando `fix_ruby_permissions` ajusta as permissões de arquivos para um projeto Ruby ou Rails.
+```bash
+$ claiss diff <caminho_do_projeto> <arquivo_json> [opções]
+```
 
-```sh
+**Opções:**
+- `--context=N`: Número de linhas de contexto (padrão: 3)
+- `--color=WHEN`: Colorir a saída (always, never, auto)
+
+### Corrigir Permissões
+
+Corrija as permissões de arquivos em projetos Ruby:
+
+```bash
 $ claiss fix_ruby_permissions <caminho_do_projeto>
 ```
 
-## Recursos Futuros
+## 🔍 Fluxo de Trabalho Exemplo
 
-Estamos continuamente trabalhando para melhorar o CLAISS e adicionar novas funcionalidades. Fique atento para atualizações!
+1. Crie um plano de refatoração:
+   ```json
+   {
+     "nome_antigo": "novo_nome",
+     "ModuloAntigo": "NovoModulo",
+     "@atributo_antigo": "@novo_atributo"
+   }
+   ```
 
-## Contribuindo
+2. Visualize as alterações:
+   ```bash
+   $ claiss diff meu_projeto alteracoes.json
+   ```
 
-Relatórios de bugs e pull requests são bem-vindos no GitHub em [https://github.com/JulioPapel/claiss](https://github.com/JulioPapel/claiss).
+3. Aplique as alterações:
+   ```bash
+   $ claiss refactor meu_projeto alteracoes.json
+   ```
 
-## Licença
+## 🛡️ Recursos de Segurança
 
-Esta gem está disponível como código aberto sob os termos da [Licença MIT](https://opensource.org/licenses/MIT).
+- Cria backups antes de fazer alterações
+- Modo de simulação para visualização prévia
+- Ignora diretórios de controle de versão (`.git/`, `.hg/`)
+- Ignora arquivos binários por padrão
+- Preserva as permissões dos arquivos
 
-## Autor
+## 🤝 Como Contribuir
 
-Júlio Papel
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/feature-incrivel`)
+3. Faça commit das suas alterações (`git commit -m 'Adiciona uma feature incrível'`)
+4. Faça push para a branch (`git push origin feature/feature-incrivel`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
+
+## 👨‍💻 Autor
+
+- **Júlio Papel** - [@JulioPapel](https://github.com/JulioPapel)
+
+## 🙏 Agradecimentos
+
+- A todos os contribuidores que ajudaram a melhorar o CLAISS
+- Inspirado por várias ferramentas de refatoração open source
