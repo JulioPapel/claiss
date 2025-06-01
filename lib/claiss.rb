@@ -61,12 +61,14 @@ module CLAISS
       Dir.glob(File.join(origin_path, '**', '*'), File::FNM_DOTMATCH).reject do |file_name|
         next true if File.directory?(file_name)
         next true if IGNORED_DIRECTORIES.any? { |dir| file_name.include?(dir) }
+
         false
       end
     end
-    
+
     def is_binary_file?(file_name)
-      binary_extensions = ['.pdf', '.png', '.jpg', '.jpeg', '.gif', '.zip', '.gz', '.tar', '.bin', '.exe', '.dll', '.so', '.dylib']
+      binary_extensions = ['.pdf', '.png', '.jpg', '.jpeg', '.svg', '.ico', '.gif', '.zip', '.gz', '.tar', '.bin',
+                           '.exe', '.dll', '.so', '.dylib']
       binary_extensions.any? { |ext| file_name.downcase.end_with?(ext) }
     end
 
@@ -146,7 +148,7 @@ module CLAISS
         process_binary_file_rename(file_name, dict, origin_path, destination_path)
         return
       end
-      
+
       begin
         # First, try to read the file as UTF-8
         text = File.read(file_name, encoding: 'UTF-8')
@@ -195,24 +197,24 @@ module CLAISS
       LOGGER.error("Error processing file #{truncated_file}: #{e.message}")
       LOGGER.debug(e.backtrace.join("\n"))
     end
-    
+
     def process_binary_file_rename(file_name, dict, origin_path, destination_path)
       relative_path = Pathname.new(file_name).relative_path_from(Pathname.new(origin_path))
       new_relative_path = replace_in_path(relative_path.to_s, dict)
-      
+
       new_file_name = if destination_path
                         File.join(destination_path, new_relative_path)
                       else
                         File.join(origin_path, new_relative_path)
                       end
-      
+
       # Se o nome do arquivo mudou, move/renomeia o arquivo
       if new_file_name != file_name
         new_dir = File.dirname(new_file_name)
         FileUtils.mkdir_p(new_dir) unless File.directory?(new_dir)
-        
+
         FileUtils.mv(file_name, new_file_name, force: true)
-        
+
         truncated_old = "...#{File.basename(file_name)}"
         truncated_new = "...#{File.basename(new_file_name)}"
         LOGGER.info("Binary file renamed from #{truncated_old} to #{truncated_new}")
