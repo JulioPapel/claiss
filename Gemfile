@@ -17,3 +17,7 @@ group :development, :test do
   gem 'rubocop', '~> 1.56', require: false
   gem 'rubocop-rspec', '~> 2.23', require: false
 end
+
+gem "diffy", "~> 3.4"
+
+gem "rspec_junit_formatter", "~> 0.6.0", :groups => [:development, :test]
