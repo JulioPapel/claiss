@@ -59,6 +59,7 @@ $ claiss refactor <project_path> <json_file> [options]
 **Options:**
 - `--destination, -d`: Specify output directory (default: in-place)
 - `--dry-run`: Preview changes without modifying files
+- `--debug`: Show detailed debug messages during processing
 
 **Example:**
 ```bash
@@ -201,13 +202,34 @@ $ claiss refactor <caminho_do_projeto> <arquivo_json> [opções]
 **Opções:**
 - `--destination, -d`: Especifica o diretório de saída (padrão: no local)
 - `--dry-run`: Visualiza as alterações sem modificar os arquivos
+- `--debug`: Mostra mensagens detalhadas de depuração durante o processamento
 
-**Exemplo:**
+**Exemplos:**
 ```bash
-$ claiss refactor meu_projeto regras.json --dry-run
+# Modo normal
+$ claiss refactor meu_projeto ~/.claiss/regras.json
+
+# Especificando diretório de destino
+$ claiss refactor meu_projeto ~/.claiss/regras.json --destination pasta_destino
+
+# Modo debug (mostra mensagens detalhadas)
+$ claiss refactor meu_projeto ~/.claiss/regras.json --debug
+
+# Todas as opções juntas
+$ claiss refactor meu_projeto ~/.claiss/regras.json --destination pasta_destino --debug
 ```
 
 #### Formato do Dicionário JSON
+
+O arquivo de regras pode estar em qualquer local, mas se estiver no diretório `~/.claiss/`, você pode usar apenas o nome do arquivo. Exemplo:
+
+```bash
+# Se o arquivo estiver em ~/.claiss/regras.json
+$ claiss refactor meu_projeto regras.json
+
+# Ou especifique o caminho completo
+$ claiss refactor meu_projeto /caminho/completo/para/regras.json
+```
 
 Crie um arquivo JSON com pares chave-valor para as substituições:
 
