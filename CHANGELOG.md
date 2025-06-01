@@ -5,6 +5,21 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.6] - 2025-06-01
+
+### Adicionado
+- Suporte para renomeação de arquivos binários (PDFs, imagens, etc.) sem modificar o conteúdo
+- Novas extensões de arquivos suportadas: .svg, .ico, entre outras
+
+### Melhorado
+- Tratamento de erros durante o processamento de arquivos
+- Mensagens de log mais informativas
+- Código mais robusto para lidar com diferentes tipos de arquivos
+
+### Corrigido
+- Problema com arquivos binários que não estavam sendo renomeados
+- Erros ao processar arquivos com codificação inválida
+
 ## [1.1.5] - 2025-06-01
 
 ### Adicionado
